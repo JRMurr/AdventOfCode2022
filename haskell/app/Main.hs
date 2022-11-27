@@ -12,14 +12,14 @@ type DayDispatcher = [(Int, IO ())]
 dayMap :: [(Int, DayDispatcher)]
 dayMap =
   [ -- map of day num to thats days parts
-    ,(1, Day01.dispatch)
+    (1, Day01.dispatch)
     -- Add day dispatch
   ]
 
 main :: IO ()
 main = do
+  print "here"
   day : part : _ <- getArgs
   let (Just dayDispatcher) = lookup (read day) dayMap
   let (Just func) = lookup (read part) dayDispatcher
   func
-

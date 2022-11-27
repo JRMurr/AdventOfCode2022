@@ -1,0 +1,9 @@
+
+# https://github.com/casey/just
+
+default:
+    @just --list
+
+#     cabal run adventOfCode2021 -- $(day) $(part) $(useExample)
+run:
+    cabal run aoc2022 -- 01 1 true

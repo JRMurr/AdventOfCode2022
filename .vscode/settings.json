@@ -1,5 +1,31 @@
 {
   "files.exclude": {
     "**/_dayTemplate/**": true
-  }
+  },
+  "cSpell.words": [
+    "assocs",
+    "fmap",
+    "gcost",
+    "gscore",
+    "Hashable",
+    "hicol",
+    "hirow",
+    "Ints",
+    "locol",
+    "lorow",
+    "maxx",
+    "maxy",
+    "miny",
+    "Mults",
+    "Prio",
+    "Thruple",
+    "treeify",
+    "trimap",
+    "uncurry",
+    "unlines"
+  ]
+  // "haskell.serverExtraArgs": "--cwd ./haskell",
+  // "haskell.serverEnvironment": {
+  //   "PWD": "/home/jr/code/aoc/2022"
+  // }
 }

@@ -13,6 +13,7 @@
             ghc
             haskell-language-server
             cabal-install
+            just
           ];
         };
       });

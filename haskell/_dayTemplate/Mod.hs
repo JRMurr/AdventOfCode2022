@@ -4,14 +4,14 @@ import Utils.Mod
 
 part1 :: IO ()
 part1 = do
-  input <- readInputLines
   print "part1"
+  input <- readInputLines
   return ()
 
 part2 :: IO ()
 part2 = do
-  input <- readInputLines
   print "part2"
+  input <- readInputLines
   return ()
 
 dispatch :: [(Int, IO ())]

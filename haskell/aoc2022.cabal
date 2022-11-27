@@ -61,14 +61,30 @@ executable aoc2022
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules:
         Day01.Mod
+        Utils.AStar
+        Utils.Mod
+        Utils.Coords
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.15.1.0
+    build-depends:
+        base ^>=4.15.1.0,
+        split >= 0.2,
+        -- pseudomacros >= 0.0.2,
+        filepath >= 1.4.0,
+        vector >= 0.12.3,
+        containers,
+        megaparsec >= 9.0,
+        primitive    ^>= 0.7,
+        parallel >= 3.2.2.0,
+        unordered-containers,
+        hashable,
+        pqueue,
+        mtl
 
     -- Directories containing source files.
     hs-source-dirs:   app
