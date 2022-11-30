@@ -46,6 +46,7 @@ getRawInput =
       [] -> readNormalInput day
       "0" : _ -> readNormalInput day
       "1" : _ -> readExampleInput day
+      "true" : _ -> readExampleInput day
       "-" : _ -> getContents
       fileName : _ -> getRawInput
 

@@ -1,0 +1,27 @@
+{
+    "files.exclude": {
+        "**/_dayTemplate/**": true
+    },
+    "cSpell.words": [
+        "assocs",
+        "fmap",
+        "gcost",
+        "gscore",
+        "Hashable",
+        "hicol",
+        "hirow",
+        "Ints",
+        "locol",
+        "lorow",
+        "maxx",
+        "maxy",
+        "miny",
+        "Mults",
+        "Prio",
+        "Thruple",
+        "treeify",
+        "trimap",
+        "uncurry",
+        "unlines"
+    ]
+}
