@@ -1,11 +1,10 @@
 module Day01.Mod where
 
 import Data.List (sortOn)
-import Data.List.Split (splitOn)
 import Utils.Mod
 
 parseInput :: [String] -> [[Int]]
-parseInput s = map (map read) (splitOn [""] s)
+parseInput = map (map read) . splitOnBlankInput
 
 part1 :: IO ()
 part1 = do

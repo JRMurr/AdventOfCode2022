@@ -6,7 +6,7 @@ import Data.List
 import Data.List.Split (splitOn)
 import Data.Void
 import System.Environment (getArgs)
-import Text.Megaparsec (Parsec, anySingle, eof, manyTill, parse, satisfy, sepBy, setInput)
+import Text.Megaparsec (MonadParsec (eof), Parsec, parse, setInput)
 import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Char.Lexer (decimal, signed)
 import Text.Megaparsec.Error (errorBundlePretty)
@@ -29,6 +29,9 @@ readExampleInput day = readFile (printf "app/Day%02d/in.example" (read day :: In
 
 readDayFile :: Int -> String -> IO String
 readDayFile day fName = readFile (printf "app/Day%02d/%s" day fName)
+
+splitOnBlankInput :: [String] -> [[String]]
+splitOnBlankInput = splitOn [""]
 
 -- | Get the input for the given day.
 --
@@ -131,4 +134,4 @@ cartProdSelf xs = [(x, y) | x <- xs, y <- xs, x /= y]
 type BinNum = [Int]
 
 toDecimal :: BinNum -> Int
-toDecimal bits = foldl (\sum (idx, val) -> sum + val * (2 ^ idx)) 0 (zip [0 .. (length bits)] (reverse bits))
+toDecimal bits = foldl (\accSum (idx, val) -> accSum + val * (2 ^ idx)) 0 (zip [0 .. (length bits)] (reverse bits))
