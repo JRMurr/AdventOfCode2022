@@ -10,8 +10,10 @@
       in {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            ghc
-            haskell-language-server
+            haskell.compiler.ghc94
+            (haskell-language-server.override {
+              supportedGhcVersions = [ "942" ];
+            })
             cabal-install
             just
           ];

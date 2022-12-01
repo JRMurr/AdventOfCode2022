@@ -73,7 +73,7 @@ executable aoc2022
 
     -- Other library packages from which modules are imported.
     build-depends:
-        base ^>=4.15.1.0,
+        base ^>=4.17.0.0,
         split >= 0.2,
         -- pseudomacros >= 0.0.2,
         filepath >= 1.4.0,
@@ -90,4 +90,4 @@ executable aoc2022
     hs-source-dirs:   app
 
     -- Base language which the package is written in.
-    default-language: Haskell2010
+    default-language: GHC2021

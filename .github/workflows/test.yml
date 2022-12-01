@@ -1,0 +1,25 @@
+name: "Cache nix env"
+on:
+    push:
+        paths:
+            - "**.nix"
+            - "flake.lock"
+jobs:
+    cache-nix-env:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                os: [macos-latest, ubuntu-latest]
+        steps:
+            - uses: actions/checkout@v3
+            - uses: cachix/install-nix-action@v18
+              with:
+                  nix_path: nixpkgs=channel:nixos-unstable
+            - uses: cachix/cachix-action@v12
+              with:
+                  name: jrmurr-aoc2022
+                  # If you chose API tokens for write access OR if you have a private cache
+                  authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+            # build dev env https://docs.cachix.org/pushing#id1
+            - run: nix develop --profile dev-profile
+            - run: cachix push jrmurr-aoc2022 dev-profile
