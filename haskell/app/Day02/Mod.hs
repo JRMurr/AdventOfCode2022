@@ -6,22 +6,21 @@ data RPS = Rock | Paper | Scissors deriving (Read, Show, Ord, Eq)
 
 -- each elms beats the prev and loses to its succ
 relation :: [RPS]
-relation = cycle [Rock, Paper, Scissors]
+relation = [Rock, Paper, Scissors]
 
 -- | Get the rps that beats this
 --
 -- >>> getWinner Paper
 -- Scissors
 getWinner :: RPS -> RPS
-getWinner r = dropWhile (/= r) relation !! 1
+getWinner r = dropWhile (/= r) (cycle relation) !! 1
 
 -- | Get the rps that loses to this
 --
 -- >>> getLoser Paper
 -- Rock
 getLoser :: RPS -> RPS
-getLoser Rock = Scissors -- special case since rock is the first elem
-getLoser r = last $ takeWhile (/= r) relation
+getLoser r = dropWhile (/= r) ((cycle . reverse) relation) !! 1
 
 readRPS :: Char -> RPS
 readRPS 'A' = Rock
@@ -56,10 +55,10 @@ beats p1 p2 = p2 == getLoser p1
 playGame :: Game -> Int
 playGame g = (rpsVal . snd) g + playGame' g
   where
-  playGame' (p1, p2)
-    | p1 == p2 = drawScore
-    | beats p2 p1 = winScore
-    | otherwise = 0
+    playGame' (p1, p2)
+      | p1 == p2 = drawScore
+      | beats p2 p1 = winScore
+      | otherwise = 0
 
 part1 :: IO ()
 part1 = do
