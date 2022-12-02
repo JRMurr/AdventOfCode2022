@@ -51,7 +51,7 @@ getRawInput =
       "1" : _ -> readExampleInput day
       "true" : _ -> readExampleInput day
       "-" : _ -> getContents
-      fileName : _ -> getRawInput
+      fileName : _ -> readFile fileName
 
 parseIntsWithSep :: String -> String -> [Int]
 parseIntsWithSep sep str = map read $ splitOn sep str

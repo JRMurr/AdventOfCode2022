@@ -10,10 +10,12 @@
       in {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            haskell.compiler.ghc94
-            (haskell-language-server.override {
-              supportedGhcVersions = [ "942" ];
-            })
+            # haskell.compiler.ghc94
+            # (haskell-language-server.override {
+            #   supportedGhcVersions = [ "942" ];
+            # })
+            ghc
+            haskell-language-server
             ormolu
             cabal-install
             just

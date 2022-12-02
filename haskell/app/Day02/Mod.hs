@@ -13,7 +13,7 @@ relation = cycle [Rock, Paper, Scissors]
 -- >>> getWinner Paper
 -- Scissors
 getWinner :: RPS -> RPS
-getWinner r = head $ drop 1 $ dropWhile (\x -> x /= r) relation
+getWinner r = dropWhile (/= r) relation !! 1
 
 -- | Get the rps that loses to this
 --
@@ -21,7 +21,7 @@ getWinner r = head $ drop 1 $ dropWhile (\x -> x /= r) relation
 -- Rock
 getLoser :: RPS -> RPS
 getLoser Rock = Scissors -- special case since rock is the first elem
-getLoser r = last $ takeWhile (\x -> x /= r) relation
+getLoser r = last $ takeWhile (/= r) relation
 
 readRPS :: Char -> RPS
 readRPS 'A' = Rock
@@ -65,8 +65,8 @@ playGame' (p1, p2)
 part1 :: IO ()
 part1 = do
   print "part1"
-  input <- (map readLineP1) <$> readInputLines
-  print $ sum $ map (playGame) input
+  input <- map readLineP1 <$> readInputLines
+  print $ sum $ map playGame input
   return ()
 
 data Outcome = Win | Lose | Draw deriving (Read, Show, Ord, Eq)
@@ -91,8 +91,8 @@ playGameP2 (rps, Lose) = playGame (rps, getLoser rps)
 part2 :: IO ()
 part2 = do
   print "part2"
-  input <- (map readLineP2) <$> readInputLines
-  print $ sum $ map (playGameP2) input
+  input <- map readLineP2 <$> readInputLines
+  print $ sum $ map playGameP2 input
   return ()
 
 dispatch :: [(Int, IO ())]

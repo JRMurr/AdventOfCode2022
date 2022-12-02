@@ -1,7 +1,5 @@
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
 
 module Utils.Coords where
 
@@ -131,4 +129,5 @@ drawCoordsGen toChar def pixels = unlines [[pixel (C y x) | x <- [minx .. maxx]]
 coordLines :: [[b]] -> [(Coord, b)]
 coordLines rows = [(C y x, z) | (y, row) <- zip [0 ..] rows, (x, z) <- zip [0 ..] row]
 
+coordLinesInt :: [[b]] -> [(Coord, b)]
 coordLinesInt = coordLines
