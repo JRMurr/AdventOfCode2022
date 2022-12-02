@@ -4,6 +4,7 @@ module Main where
 
 import qualified Day00.Mod as Day00 (dispatch)
 import qualified Day01.Mod as Day01 (dispatch)
+import qualified Day02.Mod as Day02 (dispatch)
 -- Add day import
 
 import System.Environment (getArgs)
@@ -14,7 +15,8 @@ dayMap :: [(Int, DayDispatcher)]
 dayMap =
   [ -- map of day num to thats days parts
     (0, Day00.dispatch),
-    (1, Day01.dispatch)
+    (1, Day01.dispatch),
+    (2, Day02.dispatch)
     -- Add day dispatch
   ]
 

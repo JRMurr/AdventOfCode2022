@@ -14,6 +14,7 @@
             (haskell-language-server.override {
               supportedGhcVersions = [ "942" ];
             })
+            ormolu
             cabal-install
             just
           ];
