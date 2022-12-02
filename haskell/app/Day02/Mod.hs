@@ -4,6 +4,25 @@ import Utils.Mod
 
 data RPS = Rock | Paper | Scissors deriving (Read, Show, Ord, Eq)
 
+-- each elms beats the prev and loses to its succ
+relation :: [RPS]
+relation = cycle [Rock, Paper, Scissors]
+
+-- | Get the rps that beats this
+--
+-- >>> getWinner Paper
+-- Scissors
+getWinner :: RPS -> RPS
+getWinner r = head $ drop 1 $ dropWhile (\x -> x /= r) relation
+
+-- | Get the rps that loses to this
+--
+-- >>> getLoser Paper
+-- Rock
+getLoser :: RPS -> RPS
+getLoser Rock = Scissors -- special case since rock is the first elem
+getLoser r = last $ takeWhile (\x -> x /= r) relation
+
 readRPS :: Char -> RPS
 readRPS 'A' = Rock
 readRPS 'B' = Paper
@@ -32,10 +51,7 @@ rpsVal Scissors = 3
 
 -- true if the first param beats the second
 beats :: RPS -> RPS -> Bool
-beats Rock Scissors = True
-beats Scissors Paper = True
-beats Paper Rock = True
-beats _ _ = False
+beats p1 p2 = p2 == getLoser p1
 
 playGame :: Game -> Int
 playGame g@(_, p2) = rpsVal p2 + playGame' g
@@ -69,12 +85,8 @@ readLineP2 _ = error "invalid"
 
 playGameP2 :: GameP2 -> Int
 playGameP2 (rps, Draw) = drawScore + rpsVal rps
-playGameP2 (Scissors, Win) = winScore + rpsVal Rock
-playGameP2 (Rock, Win) = winScore + rpsVal Paper
-playGameP2 (Paper, Win) = winScore + rpsVal Scissors
-playGameP2 (Scissors, Lose) = rpsVal Paper
-playGameP2 (Rock, Lose) = rpsVal Scissors
-playGameP2 (Paper, Lose) = rpsVal Rock
+playGameP2 (rps, Win) = playGame (rps, getWinner rps)
+playGameP2 (rps, Lose) = playGame (rps, getLoser rps)
 
 part2 :: IO ()
 part2 = do
