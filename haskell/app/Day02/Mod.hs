@@ -54,13 +54,12 @@ beats :: RPS -> RPS -> Bool
 beats p1 p2 = p2 == getLoser p1
 
 playGame :: Game -> Int
-playGame g@(_, p2) = rpsVal p2 + playGame' g
-
-playGame' :: Game -> Int
-playGame' (p1, p2)
-  | p1 == p2 = drawScore
-  | beats p2 p1 = winScore
-  | otherwise = 0
+playGame g = (rpsVal . snd) g + playGame' g
+  where
+  playGame' (p1, p2)
+    | p1 == p2 = drawScore
+    | beats p2 p1 = winScore
+    | otherwise = 0
 
 part1 :: IO ()
 part1 = do
