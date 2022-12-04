@@ -21,6 +21,7 @@
         "Thruple",
         "treeify",
         "trimap",
+        "tuplify",
         "uncurry",
         "unlines"
     ]

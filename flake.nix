@@ -6,7 +6,9 @@
 
   outputs = { self, nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = import nixpkgs { inherit system; };
+      let
+        pkgs = import nixpkgs { inherit system; };
+        aoc-cli = pkgs.callPackage ./aoc-cli { };
       in {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
@@ -19,7 +21,10 @@
             ormolu
             cabal-install
             just
+
+            aoc-cli
           ];
         };
+        packages = { aoc-cli = aoc-cli; };
       });
 }
