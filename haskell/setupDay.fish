@@ -29,7 +29,8 @@ sed -i "s/-- Add day import/import qualified $dayStr.Mod as $dayStr (dispatch)\n
 
 sed -i "s/-- Add day dispatch/,($dayNum, $dayStr.dispatch)\n    -- Add day dispatch/" ./app/Main.hs
 
-echo format Main.hs
+# format main.hs
+ormolu -i app/Main.hs
 
 
 aoc download -d dayNum -I -i ./app/$dayStr/in
