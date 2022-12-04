@@ -134,6 +134,9 @@ cartProd xs ys = [(x, y) | x <- xs, y <- ys]
 cartProdSelf :: Eq b => [b] -> [(b, b)]
 cartProdSelf xs = [(x, y) | x <- xs, y <- xs, x /= y]
 
+uniqPairs :: Ord b => [b] -> [(b, b)]
+uniqPairs l = nub [(x, y) | x <- l, y <- l, x < y]
+
 type BinNum = [Int]
 
 toDecimal :: BinNum -> Int
