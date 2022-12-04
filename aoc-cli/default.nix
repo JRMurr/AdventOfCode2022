@@ -13,5 +13,6 @@ pkgs.rustPlatform.buildRustPackage rec {
   cargoSha256 = "sha256-mcZdFWHXnj8bw6VV2Zjzai175q/GYXHwgmcUjNv8vvE";
 
   nativeBuildInputs = [ pkgs.pkg-config ];
-  buildInputs = [ pkgs.openssl ];
+  buildInputs = [ pkgs.openssl ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin
+    [ pkgs.darwin.apple_sdk.frameworks.Security ];
 }
