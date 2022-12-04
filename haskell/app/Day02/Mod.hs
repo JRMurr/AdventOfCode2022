@@ -63,7 +63,7 @@ playGame g = (rpsVal . snd) g + playGame' g
 part1 :: IO ()
 part1 = do
   print "part1"
-  input <- map readLineP1 <$> readInputLines
+  input <- readInputLinesMapper readLineP1
   print $ sum $ map playGame input
   return ()
 
@@ -89,7 +89,7 @@ playGameP2 (rps, Lose) = playGame (rps, getLoser rps)
 part2 :: IO ()
 part2 = do
   print "part2"
-  input <- map readLineP2 <$> readInputLines
+  input <- readInputLinesMapper readLineP2
   print $ sum $ map playGameP2 input
   return ()
 

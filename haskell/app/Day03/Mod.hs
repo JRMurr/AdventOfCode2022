@@ -29,7 +29,7 @@ charPriority x
 part1 :: IO ()
 part1 = do
   print "part1"
-  input <- map (charPriority . findCommon . readRuckSack) <$> readInputLines
+  input <- readInputLinesMapper (charPriority . findCommon . readRuckSack)
   print (sum input)
   return ()
 
@@ -46,7 +46,7 @@ findCommonP2 (x, y, z) = head $ Set.elems $ Set.intersection z $ Set.intersectio
 part2 :: IO ()
 part2 = do
   print "part2"
-  input <- map (charPriority . findCommonP2 . readRuckP2) . chunks 3 <$> readInputLines
+  input <- readInputLinesMapper ((charPriority . findCommonP2 . readRuckP2) . chunks 3)
   print (sum input)
   return ()
 

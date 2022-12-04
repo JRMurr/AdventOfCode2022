@@ -15,6 +15,9 @@ import Text.Printf
 readInputLines :: IO [String]
 readInputLines = lines <$> getRawInput
 
+readInputLinesMapper :: (String -> b) -> IO [b]
+readInputLinesMapper f = map f <$> readInputLines
+
 readInputLinesInteger :: IO [Integer]
 readInputLinesInteger = map read . lines <$> getRawInput
 

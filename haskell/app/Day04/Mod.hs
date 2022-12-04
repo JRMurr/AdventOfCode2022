@@ -1,4 +1,4 @@
-module DayXX.Mod where
+module Day04.Mod where
 
 import Utils.Mod
 
