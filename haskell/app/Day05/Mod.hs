@@ -65,7 +65,7 @@ popIdx :: Int -> Stacks -> (Char, Stacks)
 popIdx idx stacks = (popped, Map.insert idx newStack stacks)
   where
     fromStack = stacks ! idx
-    Just (popped, newStack) = trace ("fromStack " ++ show fromStack) $ pop fromStack
+    Just (popped, newStack) = pop fromStack
 
 pushIdx :: Int -> Char -> Stacks -> Stacks
 pushIdx idx new stacks = Map.insert idx newStack stacks
@@ -97,11 +97,31 @@ part1 = do
   print $ getTop appliedMoves
   return ()
 
+popIdxAmnt :: Int -> Int -> Stacks -> ([Char], Stacks)
+popIdxAmnt idx amnt stacks = (popped, Map.insert idx (Stack remaing) stacks)
+  where
+    (Stack fromStack) = stacks ! idx
+    (popped, remaing) = splitAt amnt fromStack
+
+pushLst :: Int -> [Char] -> Stacks -> Stacks
+pushLst idx lst stacks = Map.insert idx (Stack newStack) stacks
+  where
+    (Stack fromStack) = stacks ! idx
+    newStack = lst ++ fromStack
+
+handleMoveP2 :: Move -> Stacks -> Stacks
+handleMoveP2 Move {amount = amnt, from = fIdx, to = toIdx} stacks = stackFinal
+  where
+    (popped, stackPop) = popIdxAmnt fIdx amnt stacks
+    stackFinal = pushLst toIdx popped stackPop
+
 part2 :: IO ()
 part2 = do
   print "part2"
-  input <- readInputLinesMapper id
-  print input
+  (stack, moves) <- parseInput <$> readInputLines
+  print (stack, moves)
+  let appliedMoves = foldl (flip handleMoveP2) stack moves
+  print $ getTop appliedMoves
   return ()
 
 dispatch :: [(Int, IO ())]
