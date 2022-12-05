@@ -62,6 +62,7 @@ executable aoc2022
 
     -- Modules included in this executable, other than Main.
     other-modules:
+        Day05.Mod
         Day04.Mod
         Day03.Mod
         Day02.Mod
