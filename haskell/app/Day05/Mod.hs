@@ -3,8 +3,8 @@ module Day05.Mod where
 import Data.List.Split (splitOn)
 import Data.Map (Map, (!))
 import qualified Data.Map as Map
-import Data.Maybe (fromMaybe)
-import Debug.Trace (trace)
+import Data.Maybe (fromJust, fromMaybe)
+import Utils.MapUtils (mapEntry, mapEntrySideEffect)
 import Utils.Mod
 
 newtype Stack a = Stack [a]
@@ -62,16 +62,10 @@ parseInput input = (parsedStacks, parsedMoves)
     parsedMoves = map readMove moves
 
 popIdx :: Int -> Stacks -> (Char, Stacks)
-popIdx idx stacks = (popped, Map.insert idx newStack stacks)
-  where
-    fromStack = stacks ! idx
-    Just (popped, newStack) = pop fromStack
+popIdx idx = mapEntrySideEffect idx (fromJust . pop)
 
 pushIdx :: Int -> Char -> Stacks -> Stacks
-pushIdx idx new stacks = Map.insert idx newStack stacks
-  where
-    fromStack = stacks ! idx
-    newStack = push new fromStack
+pushIdx idx new = mapEntry idx (push new)
 
 handleMove :: Move -> Stacks -> Stacks
 handleMove Move {amount = 0} stacks = stacks
@@ -92,22 +86,19 @@ part1 :: IO ()
 part1 = do
   print "part1"
   (stack, moves) <- parseInput <$> readInputLines
-  print (stack, moves)
   let appliedMoves = handleMoves moves stack
-  print $ getTop appliedMoves
+  putStrLn $ getTop appliedMoves
   return ()
 
 popIdxAmnt :: Int -> Int -> Stacks -> ([Char], Stacks)
-popIdxAmnt idx amnt stacks = (popped, Map.insert idx (Stack remaing) stacks)
+popIdxAmnt idx amnt = mapEntrySideEffect idx f
   where
-    (Stack fromStack) = stacks ! idx
-    (popped, remaing) = splitAt amnt fromStack
+    f (Stack fromStack) = let (popped, reaming) = splitAt amnt fromStack in (popped, Stack reaming)
 
 pushLst :: Int -> [Char] -> Stacks -> Stacks
-pushLst idx lst stacks = Map.insert idx (Stack newStack) stacks
+pushLst idx lst = mapEntry idx f
   where
-    (Stack fromStack) = stacks ! idx
-    newStack = lst ++ fromStack
+    f (Stack fromStack) = Stack (lst ++ fromStack)
 
 handleMoveP2 :: Move -> Stacks -> Stacks
 handleMoveP2 Move {amount = amnt, from = fIdx, to = toIdx} stacks = stackFinal
@@ -119,7 +110,6 @@ part2 :: IO ()
 part2 = do
   print "part2"
   (stack, moves) <- parseInput <$> readInputLines
-  print (stack, moves)
   let appliedMoves = foldl (flip handleMoveP2) stack moves
   print $ getTop appliedMoves
   return ()

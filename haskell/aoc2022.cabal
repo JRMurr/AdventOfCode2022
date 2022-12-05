@@ -68,6 +68,7 @@ executable aoc2022
         Day02.Mod
         Day01.Mod
         Utils.AStar
+        Utils.MapUtils
         Utils.Mod
         Utils.Coords
         Day00.Mod
