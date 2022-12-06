@@ -20,3 +20,6 @@ mapEntrySideEffect key f m = (res, Map.insert key mappedVal m)
 -- fromList [('a',1)]
 mapEntry :: Ord k => k -> (v -> v) -> Map k v -> Map k v
 mapEntry key f m = let (_, res) = mapEntrySideEffect key (\x -> (Nothing, f x)) m in res
+
+-- foldMap :: (a -> b)
+-- foldMap f lst m = foldl f lst m

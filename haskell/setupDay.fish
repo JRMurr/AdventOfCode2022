@@ -33,4 +33,4 @@ sed -i "s/-- Add day dispatch/,($dayNum, $dayStr.dispatch)\n    -- Add day dispa
 ormolu -i app/Main.hs
 
 
-aoc download -d $dayNum -I -i ./app/$dayStr/in
+aoc download -o -d $dayNum -I -i ./app/$dayStr/in

@@ -112,6 +112,11 @@ chunks n xs =
   case splitAt n xs of
     (a, b) -> a : chunks n b
 
+-- >>> chunkOverlap 3 [1,2,3,4,5,6,7,8,9,10]
+-- [[1,2,3],[2,3,4],[3,4,5],[4,5,6],[5,6,7],[6,7,8],[7,8,9],[8,9,10]]
+chunkOverlap :: Int -> [a] -> [[a]]
+chunkOverlap n = takeWhile ((== n) . length) . transpose . take n . iterate tail
+
 -- | Returns a list of ways to select an element from a list without
 -- replacement.
 --
