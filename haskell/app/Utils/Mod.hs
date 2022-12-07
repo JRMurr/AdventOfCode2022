@@ -30,8 +30,8 @@ readNormalInput day = readFile (printf "app/Day%02d/in" (read day :: Integer))
 readExampleInput :: String -> IO String
 readExampleInput day = readFile (printf "app/Day%02d/in.example" (read day :: Integer))
 
-readDayFile :: Int -> String -> IO String
-readDayFile day fName = readFile (printf "app/Day%02d/%s" day fName)
+readDayFile :: String -> String -> IO String
+readDayFile day fName = readFile (printf "app/Day%02d/%s" (read day :: Integer) fName)
 
 splitOnBlankInput :: [String] -> [[String]]
 splitOnBlankInput = splitOn [""]
@@ -54,7 +54,7 @@ getRawInput =
       "1" : _ -> readExampleInput day
       "true" : _ -> readExampleInput day
       "-" : _ -> getContents
-      fileName : _ -> readFile fileName
+      fileName : _ -> readDayFile day fileName
 
 parseIntsWithSep :: String -> String -> [Int]
 parseIntsWithSep sep str = map read $ splitOn sep str

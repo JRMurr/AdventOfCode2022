@@ -4,12 +4,13 @@
 module Day07.Mod where
 
 import Control.Monad.State
+import Data.Either (partitionEithers)
 import Data.List.Split (splitOn)
 import Data.Map (Map)
 import qualified Data.Map as Map
-import qualified Debug.Trace as Debug
 import Utils.MapUtils (mapEntry)
 import Utils.Mod
+import Prelude hiding (FilePath)
 
 data File = File {fName :: String, fSize :: Int} deriving (Show)
 
@@ -42,7 +43,9 @@ parseLsLines = foldl parseLsOutLine
 --   Just file@(F _) -> if null xs then file else error ("invalid path lookup: " ++ show (x : xs) ++ ", found file:" ++ show xs)
 --   Nothing -> error ("Invalid path: " ++ show (x : xs) ++ " got nothing")
 
-getFilePath :: [String] -> FolderEntry -> FolderEntry
+type FilePath = [String]
+
+getFilePath :: FilePath -> FolderEntry -> FolderEntry
 getFilePath [] f = f
 getFilePath (x : xs) f@(F _) = error $ "invalid path:" ++ show (x : xs) ++ ", at file: " ++ show f
 getFilePath (x : xs) (Dir folder) =
@@ -53,7 +56,7 @@ getFilePath (x : xs) (Dir folder) =
         Just fe -> fe
     )
 
-setFilePath :: [String] -> FolderEntry -> Folder -> Folder
+setFilePath :: FilePath -> FolderEntry -> Folder -> Folder
 setFilePath [] _ _ = error "empty path"
 setFilePath [k] v m = Map.insert k v m
 setFilePath (x : xs) v m =
@@ -65,11 +68,11 @@ setFilePath (x : xs) v m =
     )
     m
 
-type ParsingState = ([String], Folder)
+type ParsingState = (FilePath, Folder)
 
 type ParsingRes = Folder
 
-getNewFilePath :: String -> [String] -> [String]
+getNewFilePath :: String -> FilePath -> FilePath
 getNewFilePath cdCommand currPath = case path of
   ".." -> init currPath
   _ -> currPath ++ [path]
@@ -97,19 +100,46 @@ parseInput (cdCommand : xs) = do
 handleInput :: [String] -> Folder
 handleInput s = evalState (parseInput s) ([], Map.fromList [("/", Dir Map.empty)])
 
-type FolderSize = (String, Int)
+type FolderSize = (FilePath, Int)
 
--- getFolderSizes :: Folder -> String -> State [FolderSize] [FolderSize]
--- getFolderSizes f name = do
+partitionDir :: Folder -> ([(String, Folder)], [File])
+partitionDir f =
+  partitionEithers $
+    map
+      ( \case
+          (name, Dir d) -> Left (name, d)
+          (_, F file) -> Right file
+      )
+      (Map.assocs f)
+
+sumFiles :: [File] -> Int
+sumFiles files = sum $ map fSize files
+
+-- getFolderSizes :: Folder -> FilePath -> State [FolderSize] [FolderSize]
+-- getFolderSizes f filePath = do
 --   sizes <- get
---   let
+--   let Dir currFolder = getFilePath filePath (Dir f)
+--   let (subFolders, files) = partitionDir currFolder
 --   return []
+
+getFolderSizes :: Folder -> FilePath -> [FolderSize]
+getFolderSizes f filePath = (filePath,  folderSize) : subRes
+  where
+    Dir currFolder = getFilePath filePath (Dir f)
+    (subFolders, files) = partitionDir currFolder
+    fileSizes = sumFiles files
+    subRes = concatMap (\(folderName, _) -> getFolderSizes f (filePath ++ [folderName])) subFolders
+    folderSize = fileSizes + sum (map snd subRes)
 
 part1 :: IO ()
 part1 = do
   print "part1"
   input <- handleInput <$> readInputLinesMapper id
   print input
+  let sizes = getFolderSizes input ["/"]
+  print ""
+  print sizes
+  print $ sum $ [s | (_, s) <- sizes, s <= 100000]
   return ()
 
 part2 :: IO ()
