@@ -150,3 +150,6 @@ toDecimal bits = foldl (\accSum (idx, val) -> accSum + val * (2 ^ idx)) 0 (zip [
 tuplify2 :: [a] -> (a, a)
 tuplify2 [x, y] = (x, y)
 tuplify2 _ = error "invalid list for tup2"
+
+takeAndDropWhile :: (a -> Bool) -> [a] -> ([a], [a])
+takeAndDropWhile = span
