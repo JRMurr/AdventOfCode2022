@@ -3,6 +3,8 @@
 
 module Utils.Coords where
 
+import qualified Control.Arrow as Data.Bifunctor
+import Data.Char (digitToInt)
 import Data.Foldable
 import Data.Hashable
 import Data.Ix
@@ -25,7 +27,8 @@ instance Ix Coord where
     (row - lorow) * (hicol - locol + 1) + (col - locol)
 
   inRange (C lorow locol, C hirow hicol) (C row col) =
-    lorow <= row && row <= hirow
+    lorow <= row
+      && row <= hirow
       && locol <= col
       && col <= hicol
 
@@ -35,9 +38,9 @@ instance Ix Coord where
 type DirFunc = Coord -> Coord
 
 above, below, left, right :: Coord -> Coord
-above (C y x) = C (y -1) x
+above (C y x) = C (y - 1) x
 below (C y x) = C (y + 1) x
-left (C y x) = C y (x -1)
+left (C y x) = C y (x - 1)
 right (C y x) = C y (x + 1)
 
 northWest, northEast, southWest, southEast :: Coord -> Coord
@@ -53,9 +56,9 @@ isLeft (C _ x1) (C _ x2) = x1 < x2
 isRight (C _ x1) (C _ x2) = x1 > x2
 
 turnLeft, turnRight, turnAround :: Coord -> Coord
-turnLeft (C y x) = C (- x) y
-turnRight (C y x) = C x (- y)
-turnAround (C y x) = C (- y) (- x)
+turnLeft (C y x) = C (-x) y
+turnRight (C y x) = C x (-y)
+turnAround (C y x) = C (-y) (-x)
 
 -- | Compute the Manhattan distance between two coordinates
 manhattan :: Coord -> Coord -> Int
@@ -68,25 +71,25 @@ cardinal c = c `seq` [above c, left c, right c, below c]
 -- | Compute the 8 cardinal neighbors and diagonal neighbors
 neighbors :: Coord -> [Coord]
 neighbors c =
-  c
-    `seq` [ above c,
-            left c,
-            right c,
-            below c,
-            above (left c),
-            above (right c),
-            below (left c),
-            below (right c)
-          ]
+  c `seq`
+    [ above c,
+      left c,
+      right c,
+      below c,
+      above (left c),
+      above (right c),
+      below (left c),
+      below (right c)
+    ]
 
 neighborsCardinal :: Coord -> [Coord]
 neighborsCardinal c =
-  c
-    `seq` [ above c,
-            left c,
-            right c,
-            below c
-          ]
+  c `seq`
+    [ above c,
+      left c,
+      right c,
+      below c
+    ]
 
 -- | Given a collection of cords, get the min and max cords that would contain all the cords in the collection
 boundingBox :: Foldable t => t Coord -> Maybe (Coord, Coord)
@@ -101,8 +104,14 @@ boundingBox t =
 origin :: Coord
 origin = C 0 0
 
-north :: Coord
+north, south, east, west :: Coord
 north = C (-1) 0
+south = C 1 0
+east = C 0 1
+west = C 0 (-1)
+
+cardinalDirs :: [Coord]
+cardinalDirs = [north, south, east, west]
 
 addCoord :: Coord -> Coord -> Coord
 addCoord (C y x) (C v u) = C (y + v) (x + u)
@@ -111,7 +120,7 @@ subCoord :: Coord -> Coord -> Coord
 subCoord (C y x) (C v u) = C (v - y) (u - x)
 
 cordAngle :: Coord -> Double
-cordAngle (C y x) = atan2 (- fromIntegral x) (fromIntegral y)
+cordAngle (C y x) = atan2 (-fromIntegral x) (fromIntegral y)
 
 drawCoords :: Map Coord Char -> String
 drawCoords = drawCoordsGen id ' '
@@ -129,5 +138,5 @@ drawCoordsGen toChar def pixels = unlines [[pixel (C y x) | x <- [minx .. maxx]]
 coordLines :: [[b]] -> [(Coord, b)]
 coordLines rows = [(C y x, z) | (y, row) <- zip [0 ..] rows, (x, z) <- zip [0 ..] row]
 
-coordLinesInt :: [[b]] -> [(Coord, b)]
-coordLinesInt = coordLines
+coordLinesInt :: [String] -> [(Coord, Int)]
+coordLinesInt s = map (Data.Bifunctor.second digitToInt) $ coordLines s
