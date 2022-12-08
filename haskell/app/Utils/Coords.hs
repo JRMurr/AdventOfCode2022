@@ -10,6 +10,7 @@ import Data.Hashable
 import Data.Ix
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Maybe
 import GHC.Arr
 import GHC.Generics (Generic)
 
@@ -140,3 +141,7 @@ coordLines rows = [(C y x, z) | (y, row) <- zip [0 ..] rows, (x, z) <- zip [0 ..
 
 coordLinesInt :: [String] -> [(Coord, Int)]
 coordLinesInt s = map (Data.Bifunctor.second digitToInt) $ coordLines s
+
+-- | Get points in a given direction from the starting point that are in the map
+pointsAlongLine :: Coord -> Map Coord a -> Coord -> [a]
+pointsAlongLine c tm dir = catMaybes $ takeWhile isJust $ map (`Map.lookup` tm) $ tail $ iterate (addCoord dir) c
