@@ -6,20 +6,18 @@ module Utils.Coords where
 import qualified Control.Arrow as Data.Bifunctor
 import Data.Char (digitToInt)
 import Data.Foldable
+import qualified Data.Foldable as Set
 import Data.Hashable
 import Data.Ix
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
+import Data.Set (Set)
 import GHC.Arr
 import GHC.Generics (Generic)
 
 data Coord = C !Int !Int
   deriving (Read, Show, Ord, Eq, Generic)
-
-coordRow, coordCol :: Coord -> Int
-coordRow (C row _) = row
-coordCol (C _ col) = col
 
 instance Hashable Coord
 
@@ -38,6 +36,10 @@ instance Ix Coord where
 
 type DirFunc = Coord -> Coord
 
+coordRow, coordCol :: Coord -> Int
+coordRow (C row _) = row
+coordCol (C _ col) = col
+
 above, below, left, right :: Coord -> Coord
 above (C y x) = C (y - 1) x
 below (C y x) = C (y + 1) x
@@ -50,11 +52,13 @@ northEast = above . right
 southWest = below . left
 southEast = below . right
 
-isAbove, isBelow, isLeft, isRight :: Coord -> Coord -> Bool
+isAbove, isBelow, isLeft, isRight, sameRow, sameCol :: Coord -> Coord -> Bool
 isAbove (C y1 _) (C y2 _) = y1 < y2
 isBelow (C y1 _) (C y2 _) = y1 > y2
 isLeft (C _ x1) (C _ x2) = x1 < x2
 isRight (C _ x1) (C _ x2) = x1 > x2
+sameRow (C y1 _) (C y2 _) = y1 == y2
+sameCol (C _ x1) (C _ x2) = x1 == x2
 
 turnLeft, turnRight, turnAround :: Coord -> Coord
 turnLeft (C y x) = C (-x) y
@@ -123,6 +127,9 @@ subCoord (C y x) (C v u) = C (v - y) (u - x)
 cordAngle :: Coord -> Double
 cordAngle (C y x) = atan2 (-fromIntegral x) (fromIntegral y)
 
+drawCoordSet :: Set Coord -> String
+drawCoordSet s = drawCoordsGen id '.' $ Map.fromList [(c, '#') | c <- Set.toList s]
+
 drawCoords :: Map Coord Char -> String
 drawCoords = drawCoordsGen id ' '
 
@@ -130,9 +137,9 @@ drawCoords' :: Char -> Map Coord Char -> String
 drawCoords' = drawCoordsGen id
 
 drawCoordsGen :: (t -> Char) -> t -> Map Coord t -> String
-drawCoordsGen toChar def pixels = unlines [[pixel (C y x) | x <- [minx .. maxx]] | y <- [miny .. maxy]]
+drawCoordsGen toChar defaultChar pixels = unlines [[pixel (C y x) | x <- [minx .. maxx]] | y <- [miny .. maxy]]
   where
-    pixel c = toChar $ Map.findWithDefault def c pixels
+    pixel c = toChar $ Map.findWithDefault defaultChar c pixels
     Just (C miny minx, C maxy maxx) = boundingBox (Map.keys pixels)
 
 -- | Read cords for each char in a list of strings. 0,0 would be the first char in the first string

@@ -6,7 +6,7 @@ import Control.Monad.State
 import Data.List.Split (splitOn)
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Utils.Coords (Coord, addCoord, east, neighbors, north, origin, south, west)
+import Utils.Coords
 import Utils.Mod
 
 newtype Head = H Coord deriving (Show, Eq, Ord)
@@ -80,11 +80,58 @@ part1 = do
 toHead :: Tail -> Head
 toHead (T t) = H t
 
+-- The head, 8 tails, and the places nine has visited
+type LongRope = (Head, [Tail], Visited)
+
+towardsH :: Head -> Tail -> Dir
+towardsH (H h) (T t)
+  | h == t = Dir (C 0 0)
+  -- above states
+  | h `isAbove` t && h `isRight` t = Dir (addCoord north east)
+  | h `isAbove` t && h `isLeft` t = Dir (addCoord north west)
+  | h `isAbove` t && h `sameCol` t = Dir north
+  -- below states
+  | h `isBelow` t && h `isRight` t = Dir (addCoord south east)
+  | h `isBelow` t && h `isLeft` t = Dir (addCoord south west)
+  | h `isBelow` t && h `sameCol` t = Dir south
+  -- same row states
+  | h `sameRow` t && h `isRight` t = Dir east
+  | h `sameRow` t && h `isLeft` t = Dir west
+  -- error
+  | otherwise = error $ "invalid h t: " ++ show (h, t)
+
+longRopeReducer :: (Head, [Tail]) -> Tail -> (Head, [Tail])
+longRopeReducer (newPos, acc) t =
+  if isValidRopePos newPos t
+    then (toHead t, t : acc)
+    else let newTail = (addDir t $ towardsH newPos t) in (toHead newTail, newTail : acc)
+
+longRopeMove :: Dir -> Head -> [Tail] -> (Head, [Tail])
+longRopeMove d h tails = (newH, reverse newT)
+  where
+    newH = addDir h d
+    (_, newT) = foldl longRopeReducer (newH, []) tails
+
+simulateLongRope :: [Dir] -> State LongRope EndVal
+simulateLongRope [] = do
+  (_, _, v) <- get
+  return v
+simulateLongRope (d : ds) = do
+  (h, t, v) <- get
+  let (newH, newT) = longRopeMove d h t
+  put (newH, newT, Set.insert (last newT) v)
+  simulateLongRope ds
+
+runLongSim :: [Dir] -> Visited
+runLongSim dirs = evalState (simulateLongRope dirs) (H origin, replicate 9 startT, Set.fromList [startT])
+
 part2 :: IO ()
 part2 = do
   print "part2"
-  input <- readInputLinesMapper id
-  print input
+  input <- concatMap readCommand <$> readInputLinesMapper id
+  let seen = runLongSim input
+  -- printf $ drawCoordSet (Set.map (\(T c) -> c) seen)
+  print $ Set.size $ Set.map (\(T c) -> c) seen
   return ()
 
 dispatch :: [(Int, IO ())]
