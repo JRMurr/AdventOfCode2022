@@ -15,11 +15,6 @@ newtype Tail = T Coord deriving (Show, Eq, Ord)
 
 type Visited = Set Tail
 
-newtype Dir = Dir Coord deriving (Show) -- TODO: move to coord utils?
-
-class AddDir a where
-  addDir :: a -> Dir -> a
-
 instance AddDir Head where
   addDir :: Head -> Dir -> Head
   addDir (H h) (Dir d) = H (addCoord h d)
@@ -41,41 +36,13 @@ readCommand s = replicate (read amnt) (charToDir c)
   where
     [[c], amnt] = splitOn " " s
 
-type RopeState = (Head, Tail, Visited)
-
 type EndVal = Visited
 
 isValidRopePos :: Head -> Tail -> Bool
 isValidRopePos (H h) (T t) = t == h || t `elem` neighbors h
 
-toTail :: Head -> Tail
-toTail (H h) = T h
-
-simulateRope :: [Dir] -> State RopeState EndVal
-simulateRope [] = do
-  (_, _, v) <- get
-  return v
-simulateRope (d : ds) = do
-  (h, t, v) <- get
-  let newH = addDir h d
-  if isValidRopePos newH t
-    then put (newH, t, v)
-    else -- put t as the old h pos
-      let newTail = toTail h in put (newH, newTail, Set.insert newTail v)
-  simulateRope ds
-
 startT :: Tail
 startT = T origin
-
-runSim :: [Dir] -> Visited
-runSim dirs = evalState (simulateRope dirs) (H origin, T origin, Set.fromList [startT])
-
-part1 :: IO ()
-part1 = do
-  print "part1"
-  input <- concatMap readCommand <$> readInputLinesMapper id
-  print $ Set.size $ runSim input
-  return ()
 
 toHead :: Tail -> Head
 toHead (T t) = H t
@@ -84,21 +51,7 @@ toHead (T t) = H t
 type LongRope = (Head, [Tail], Visited)
 
 towardsH :: Head -> Tail -> Dir
-towardsH (H h) (T t)
-  | h == t = Dir (C 0 0)
-  -- above states
-  | h `isAbove` t && h `isRight` t = Dir (addCoord north east)
-  | h `isAbove` t && h `isLeft` t = Dir (addCoord north west)
-  | h `isAbove` t && h `sameCol` t = Dir north
-  -- below states
-  | h `isBelow` t && h `isRight` t = Dir (addCoord south east)
-  | h `isBelow` t && h `isLeft` t = Dir (addCoord south west)
-  | h `isBelow` t && h `sameCol` t = Dir south
-  -- same row states
-  | h `sameRow` t && h `isRight` t = Dir east
-  | h `sameRow` t && h `isLeft` t = Dir west
-  -- error
-  | otherwise = error $ "invalid h t: " ++ show (h, t)
+towardsH (H h) (T t) = getDirTowards h t
 
 longRopeReducer :: (Head, [Tail]) -> Tail -> (Head, [Tail])
 longRopeReducer (newPos, acc) t =
@@ -124,6 +77,16 @@ simulateLongRope (d : ds) = do
 
 runLongSim :: [Dir] -> Visited
 runLongSim dirs = evalState (simulateLongRope dirs) (H origin, replicate 9 startT, Set.fromList [startT])
+
+runSim :: [Dir] -> Visited
+runSim dirs = evalState (simulateLongRope dirs) (H origin, [startT], Set.fromList [startT])
+
+part1 :: IO ()
+part1 = do
+  print "part1"
+  input <- concatMap readCommand <$> readInputLinesMapper id
+  print $ Set.size $ runSim input
+  return ()
 
 part2 :: IO ()
 part2 = do

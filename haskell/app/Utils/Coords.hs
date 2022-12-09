@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Utils.Coords where
@@ -34,7 +35,31 @@ instance Ix Coord where
   range (C lorow locol, C hirow hicol) =
     [C row col | row <- [lorow .. hirow], col <- [locol .. hicol]]
 
-type DirFunc = Coord -> Coord
+newtype Dir = Dir Coord deriving (Show)
+
+class AddDir a where
+  addDir :: a -> Dir -> a
+
+instance AddDir Coord where
+  addDir :: Coord -> Dir -> Coord
+  addDir c (Dir d) = addCoord c d
+
+getDirTowards :: Coord -> Coord -> Dir
+getDirTowards start end
+  | start == end = error $ "start == end: " ++ show (start, end)
+  -- above states
+  | start `isAbove` end && start `isRight` end = Dir (addCoord north east)
+  | start `isAbove` end && start `isLeft` end = Dir (addCoord north west)
+  | start `isAbove` end && start `sameCol` end = Dir north
+  -- below states
+  | start `isBelow` end && start `isRight` end = Dir (addCoord south east)
+  | start `isBelow` end && start `isLeft` end = Dir (addCoord south west)
+  | start `isBelow` end && start `sameCol` end = Dir south
+  -- same row states
+  | start `sameRow` end && start `isRight` end = Dir east
+  | start `sameRow` end && start `isLeft` end = Dir west
+  -- error
+  | otherwise = error $ "invalid start end: " ++ show (start, end)
 
 coordRow, coordCol :: Coord -> Int
 coordRow (C row _) = row
@@ -126,6 +151,8 @@ subCoord (C y x) (C v u) = C (v - y) (u - x)
 
 cordAngle :: Coord -> Double
 cordAngle (C y x) = atan2 (-fromIntegral x) (fromIntegral y)
+
+-- drawing funcs
 
 drawCoordSet :: Set Coord -> String
 drawCoordSet s = drawCoordsGen id '.' $ Map.fromList [(c, '#') | c <- Set.toList s]
