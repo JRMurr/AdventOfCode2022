@@ -42,9 +42,9 @@ part1 = do
   return ()
 
 render :: [Int] -> String
-render x = unlines $ map renderRow rows
+render vals = unlines $ map renderRow rows
   where
-    rows = chunksOf 40 $ tail x
+    rows = chunksOf 40 $ tail vals
     renderRow = zipWith (\i x -> if abs (i - x) < 2 then '#' else ' ') [0 ..]
 
 part2 :: IO ()
