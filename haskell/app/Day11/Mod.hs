@@ -4,7 +4,6 @@ import Data.Char (isNumber)
 import Data.List (sortBy)
 import Data.Map (Map, (!))
 import qualified Data.Map as Map
-import qualified Debug.Trace as Debug
 import Utils.Mod
 
 data OpVal = Old | Val Int deriving (Show)
