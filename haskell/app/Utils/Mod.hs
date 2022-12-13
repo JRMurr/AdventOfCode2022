@@ -98,6 +98,13 @@ parseLines p input =
   where
     parse1 x = setInput x *> p <* eof <* setInput "\n" <* newline
 
+parseThrow :: Parser a -> String -> a
+parseThrow p input = case res of
+  Left e -> error $ errorBundlePretty e
+  Right a -> a
+  where
+    res = parse p "" input
+
 -- | Parse a signed integral number
 number :: Integral a => Parser a
 number = signed (return ()) decimal
@@ -153,3 +160,7 @@ tuplify2 _ = error "invalid list for tup2"
 
 takeAndDropWhile :: (a -> Bool) -> [a] -> ([a], [a])
 takeAndDropWhile = span
+
+-- use as "_ <- printWithNewLines input"
+printWithNewLines :: (Foldable t, Show a) => t a -> IO ()
+printWithNewLines = mapM_ print
