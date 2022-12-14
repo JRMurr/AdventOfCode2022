@@ -45,7 +45,7 @@ instance AddDir Coord where
   addDir c (Dir d) = addCoord c d
 
 getDirTowards :: Coord -> Coord -> Dir
-getDirTowards start end
+getDirTowards end start
   | start == end = error $ "start == end: " ++ show (start, end)
   -- above states
   | start `isAbove` end && start `isRight` end = Dir (addCoord north east)
@@ -60,6 +60,12 @@ getDirTowards start end
   | start `sameRow` end && start `isLeft` end = Dir west
   -- error
   | otherwise = error $ "invalid start end: " ++ show (start, end)
+
+-- Get all points in the line from start to end
+pointsInLine :: Coord -> Coord -> [Coord]
+pointsInLine start end
+  | start == end = []
+  | otherwise = let (Dir d) = getDirTowards start end in end : takeWhile (/= end) (iterate (addCoord d) start)
 
 coordRow, coordCol :: Coord -> Int
 coordRow (C row _) = row

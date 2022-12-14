@@ -51,7 +51,7 @@ toHead (T t) = H t
 type LongRope = (Head, [Tail], Visited)
 
 towardsH :: Head -> Tail -> Dir
-towardsH (H h) (T t) = getDirTowards h t
+towardsH (H h) (T t) = getDirTowards t h -- TODO: did i swap this order before?
 
 longRopeReducer :: (Head, [Tail]) -> Tail -> (Head, [Tail])
 longRopeReducer (newPos, acc) t =
