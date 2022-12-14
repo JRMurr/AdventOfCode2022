@@ -2,9 +2,11 @@ module Day14.Mod where
 
 import Data.List (find)
 import Data.List.Split (splitOn)
-import Data.Map (Map, (!))
+import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Maybe (fromJust, listToMaybe)
+import Data.Maybe (fromJust)
+import Data.Set (Set)
+import qualified Data.Set as Set
 import qualified Debug.Trace as Debug
 import Utils.Coords
 import Utils.Mod
@@ -71,14 +73,11 @@ belowCoords c = c `seq` [below c, southWest c, southEast c]
 findResting :: Blocks -> Coord -> Maybe Coord
 findResting bMap c
   | isBelowAll bMap c = Nothing
-  -- \| firstNonAir `isBelow` c = findResting bMap firstNonAir
   | otherwise = case find (\bc -> Map.findWithDefault Air bc bMap == Air) (belowCoords c) of
       -- there is a path for air so follow it
       Just p -> findResting bMap p
       -- all blocked so rest here
       Nothing -> Just c
-  where
-    firstNonAir = getFirstNonAirBelow bMap c
 
 dropSand :: Blocks -> Maybe Blocks
 dropSand bMap = fmap (\c -> Map.insert c Sand bMap) (findResting bMap sandStartCoord)
@@ -109,6 +108,8 @@ part1 = do
   return ()
 
 -- TODO
+-- use state monad to do multiple updates in one go easier
+
 -- if lands at point with west and east air and sw and se blocks, can fill west and east
 -- if lands with left and right neighbors next will land on top
 -- maybe memoize the boundingBox call?
@@ -116,7 +117,8 @@ part1 = do
 part2 :: IO ()
 part2 = do
   print "part2"
-  input <- readInputLinesMapper parseLine
+  -- input <- Set.fromList . Map.keys . foldl fillRocks Map.empty <$> readInputLinesMapper parseLine
+  input <- getMap <$> readInputLinesMapper parseLine
   print input
   return ()
 
