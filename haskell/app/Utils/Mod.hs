@@ -4,6 +4,7 @@ import Data.List
 -- import System.FilePath (combine, takeDirectory)
 
 import Data.List.Split (splitOn)
+import qualified Data.Map as Map
 import Data.Void
 import System.Environment (getArgs)
 import Text.Megaparsec (MonadParsec (eof), Parsec, parse, setInput)
@@ -164,3 +165,6 @@ takeAndDropWhile = span
 -- use as "_ <- printWithNewLines input"
 printWithNewLines :: (Foldable t, Show a) => t a -> IO ()
 printWithNewLines = mapM_ print
+
+insertList :: (Foldable t, Ord k) => Map.Map k a -> t (k, a) -> Map.Map k a
+insertList = foldl (\m (k, v) -> Map.insert k v m)
