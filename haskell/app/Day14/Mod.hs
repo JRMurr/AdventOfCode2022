@@ -1,12 +1,11 @@
 module Day14.Mod where
 
+import Control.Monad.State
 import Data.List (find)
 import Data.List.Split (splitOn)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
-import Data.Set (Set)
-import qualified Data.Set as Set
 import qualified Debug.Trace as Debug
 import Utils.Coords
 import Utils.Mod
@@ -33,17 +32,8 @@ fillRocks bMap path = foldl (\mp k -> Map.insert k Block mp) bMap linePoints
     pairs = map tuplify2 (chunkOverlap 2 path)
     linePoints = concatMap (uncurry pointsInLine) pairs
 
--- get bounding box for map then fill all missing points with air
-fillAir :: Blocks -> Blocks
-fillAir bMap = Map.fromList allPoints
-  where
-    Just (C miny minx, C maxy maxx) = boundingBox (Map.keys bMap)
-    getPoint c = (c, Map.findWithDefault Air c bMap)
-    allPoints = [getPoint (C y x) | x <- [minx .. maxx], y <- [miny .. maxy]]
-
--- get all coords with air and rocks filled
 getMap :: [RockPath] -> Blocks
-getMap paths = fillAir $ foldl fillRocks Map.empty paths
+getMap = foldl fillRocks Map.empty
 
 sandStartCoord :: Coord
 sandStartCoord = C 0 500
@@ -107,19 +97,46 @@ part1 = do
   print sandCount
   return ()
 
--- TODO
--- use state monad to do multiple updates in one go easier
+-- use state and only compute floor once, wayy faster
+type SimState = (Int, Blocks)
 
--- if lands at point with west and east air and sw and se blocks, can fill west and east
--- if lands with left and right neighbors next will land on top
--- maybe memoize the boundingBox call?
+-- get the y level of the inf floor
+getFloor :: Blocks -> Int
+getFloor bMap = let Just (_, C maxy _) = boundingBox (Map.keys bMap) in maxy + 2
+
+getPoint :: Ord k => Map k Block -> k -> Block
+getPoint bMap c = Map.findWithDefault Air c bMap
+
+findRestingP2 :: Int -> Blocks -> Coord -> Coord
+findRestingP2 floorLevel bMap c
+  | coordRow c >= floorLevel = above c
+  | otherwise = case find (\bc -> Map.findWithDefault Air bc bMap == Air) (belowCoords c) of
+      -- there is a path for air so follow it
+      Just p -> findRestingP2 floorLevel bMap p
+      -- all blocked so rest here
+      Nothing -> c
+
+runSim :: Int -> State SimState SimState
+runSim floorLevel = do
+  (stepCount, blocks) <- get
+  if getPoint blocks sandStartCoord == Sand
+    then return (stepCount, blocks)
+    else
+      let c = findRestingP2 floorLevel blocks sandStartCoord
+       in Debug.trace ("(count, c): " ++ show (stepCount, c)) $
+            ( do
+                put (stepCount + 1, Map.insert c Sand blocks)
+                runSim floorLevel
+            )
 
 part2 :: IO ()
 part2 = do
   print "part2"
   -- input <- Set.fromList . Map.keys . foldl fillRocks Map.empty <$> readInputLinesMapper parseLine
   input <- getMap <$> readInputLinesMapper parseLine
-  print input
+  let (sandCount, finalMap) = evalState (runSim $ getFloor input) (0, input)
+  putStrLn $ drawMap $ finalMap
+  print sandCount
   return ()
 
 dispatch :: [(Int, IO ())]
