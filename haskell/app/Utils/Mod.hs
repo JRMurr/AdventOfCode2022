@@ -141,9 +141,13 @@ pickOne xs = [(x, l ++ r) | (l, x : r) <- zip (inits xs) (tails xs)]
 enumerate :: [b] -> [(Int, b)]
 enumerate x = zip [0 .. length x - 1] x
 
+-- >>> cartProd [1,2,3] "abc"
+-- [(1,'a'),(1,'b'),(1,'c'),(2,'a'),(2,'b'),(2,'c'),(3,'a'),(3,'b'),(3,'c')]
 cartProd :: [a] -> [b] -> [(a, b)]
 cartProd xs ys = [(x, y) | x <- xs, y <- ys]
 
+-- >>> cartProdSelf [1,2,3]
+-- [(1,2),(1,3),(2,1),(2,3),(3,1),(3,2)]
 cartProdSelf :: Eq b => [b] -> [(b, b)]
 cartProdSelf xs = [(x, y) | x <- xs, y <- xs, x /= y]
 
@@ -168,3 +172,9 @@ printWithNewLines = mapM_ print
 
 insertList :: (Foldable t, Ord k) => Map.Map k a -> t (k, a) -> Map.Map k a
 insertList = foldl (\m (k, v) -> Map.insert k v m)
+
+isInRange :: Ord a => a -> a -> a -> Bool
+isInRange lower upper x = lower <= x && x <= upper
+
+(<?) :: Ord a => a -> (a, a) -> Bool
+(<?) = flip (uncurry isInRange)

@@ -2,6 +2,8 @@
 
 module Day15.Mod where
 
+import Data.List (find, nub)
+import Data.Maybe (mapMaybe)
 import Data.Set (Set, (\\))
 import qualified Data.Set as Set
 import qualified Debug.Trace as Debug
@@ -112,11 +114,49 @@ part1 = do
   print $ Set.size $ getAllNonBeaconPoints 2000000 input
   return ()
 
+-- the x,y point must be 1 unit outside the range of the existing sensors to be unique
+
+-- get the perimmiter points of a diamond of given size
+getPointsAtDist :: Int -> [Coord]
+getPointsAtDist dist = nub [C (x * mulx) (y * muly) | ((x, y), (mulx, muly)) <- cartProd points muls]
+  where
+    -- lowerRightLine = [C i (dist - i) | i <- [0 .. dist]]
+    points = [(i, dist - i) | i <- [0 .. dist]]
+    muls = let nums = [-1, 1] in [(x, y) | x <- nums, y <- nums]
+
+getPossibleForPair :: Int -> SensorBecaon -> [Coord]
+getPossibleForPair maxCoordVal (sc, bc) = filter (\(C x y) -> validCoord x && validCoord y) possiblePoints
+  where
+    validCoord = isInRange 0 maxCoordVal
+    md = manhattan sc bc
+    possiblePoints = map (addCoord sc) $ getPointsAtDist (md + 1)
+
+isInside :: Coord -> SensorBecaon -> Bool
+isInside c (sc, bc) = dist <= radius
+  where
+    radius = manhattan sc bc
+    dist = manhattan sc c
+
+findPoint :: Int -> [SensorBecaon] -> Maybe Coord
+findPoint maxCoordVal pairs = find isValid allPossible
+  where
+    getPossibleForPair' = getPossibleForPair maxCoordVal
+    allPossible = concatMap getPossibleForPair' pairs
+    isValid c = not (any (isInside c) pairs)
+
+getTuning :: Int -> [SensorBecaon] -> Int
+getTuning maxCoordVal pairs = x * 4000000 + y
+  where
+    Just (C y x) = findPoint maxCoordVal pairs
+
 part2 :: IO ()
 part2 = do
   print "part2"
-  input <- readInputLinesMapper id
-  print input
+  input <- readInputLinesMapper (parseThrow parseLine)
+  -- print input
+  -- print $ getPossibleForPair 20 $ ((C 7 8), (C 10 2))
+  print $ (getTuning 4000000) input
+  -- print $ isInside (C 17 9) ((C 16 9), (C 16 10))
   return ()
 
 dispatch :: [(Int, IO ())]
