@@ -3,7 +3,7 @@
 module Day15.Mod where
 
 import Data.List (find, nub)
-import Data.Maybe (mapMaybe)
+import Data.Maybe (isNothing, mapMaybe)
 import Data.Set (Set, (\\))
 import qualified Data.Set as Set
 import qualified Debug.Trace as Debug
@@ -118,10 +118,9 @@ part1 = do
 
 -- get the perimmiter points of a diamond of given size
 getPointsAtDist :: Int -> [Coord]
-getPointsAtDist dist = nub [C (x * mulx) (y * muly) | ((x, y), (mulx, muly)) <- cartProd points muls]
+getPointsAtDist dist = C 0 dist : C 0 (-dist) : C (-dist) 0 : C dist 0 : [C (x * mulx) (y * muly) | ((x, y), (mulx, muly)) <- cartProd points muls]
   where
-    -- lowerRightLine = [C i (dist - i) | i <- [0 .. dist]]
-    points = [(i, dist - i) | i <- [0 .. dist]]
+    points = [(i, dist - i) | i <- [1 .. dist]]
     muls = let nums = [-1, 1] in [(x, y) | x <- nums, y <- nums]
 
 getPossibleForPair :: Int -> SensorBecaon -> [Coord]
@@ -138,10 +137,10 @@ isInside c (sc, bc) = dist <= radius
     dist = manhattan sc c
 
 findPoint :: Int -> [SensorBecaon] -> Maybe Coord
-findPoint maxCoordVal pairs = find isValid allPossible
+findPoint maxCoordVal pairs = head $ dropWhile isNothing $ [find isValid p | p <- allPossible] -- need to be weird for laziness
   where
     getPossibleForPair' = getPossibleForPair maxCoordVal
-    allPossible = concatMap getPossibleForPair' pairs
+    allPossible = map getPossibleForPair' pairs
     isValid c = not (any (isInside c) pairs)
 
 getTuning :: Int -> [SensorBecaon] -> Int
