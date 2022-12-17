@@ -22,6 +22,9 @@ readInputLinesMapper f = map f <$> readInputLines
 readInputLinesInteger :: IO [Integer]
 readInputLinesInteger = map read . lines <$> getRawInput
 
+readInputLinesParser :: Parser a -> IO [a]
+readInputLinesParser p = map (parseThrow p) <$> readInputLines
+
 removeEmptyString :: [String] -> [String]
 removeEmptyString = filter (not . null)
 
@@ -178,3 +181,6 @@ isInRange lower upper x = lower <= x && x <= upper
 
 (<?) :: Ord a => a -> (a, a) -> Bool
 (<?) = flip (uncurry isInRange)
+
+printNewLine :: (Foldable t, Show a) => t a -> IO ()
+printNewLine = mapM_ print
