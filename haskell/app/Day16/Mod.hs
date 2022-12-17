@@ -1,13 +1,13 @@
 module Day16.Mod where
 
+import Data.List (permutations)
 import Data.Map (Map, (!))
 import qualified Data.Map as Map
+import Data.Maybe (mapMaybe)
 import qualified Debug.Trace as Debug
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Utils.Mod
-import Data.List (permutations)
-import Data.Maybe (mapMaybe)
 
 parseInt :: Parser Int
 parseInt = label "integer" $ read <$> (some numberChar <|> ((:) <$> char '-' <*> some numberChar))
@@ -46,7 +46,7 @@ toVMap valves = Map.fromList [(vName v, v) | v <- valves]
 
 -- https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
 
-getPathLength :: PathLengths-> Path -> Int
+getPathLength :: PathLengths -> Path -> Int
 getPathLength currMap path = Map.findWithDefault 1000000 path currMap -- max bound is sad as a deafult for some reason
 
 calcPathLengths :: ValveMap -> PathLengths
@@ -64,22 +64,40 @@ calcPathLengths vMap = foldl computeTriplet initMap vertexTriplets
         distKJ = dist k j
         possibleDist = distIK + distKJ
 
--- just get all possible paths from AA, ignore steps for now
--- TODO: this is slow
-getAllOrderings :: ValveMap -> [[VName]]
-getAllOrderings vMap = map (Vname "AA": ) (permutations validValves)
-  where
-    allValves = Map.elems vMap
-    validValves = mapMaybe (\v -> if vRate v /= 0 then Just (vName v) else Nothing) allValves
+type Node = ([VName], VName, Int)
 
+-- TODO: gotta have an off by one on step math or something
+getMaxScore :: ValveMap -> PathLengths -> Int -> Node -> Int
+getMaxScore vMap pMap step (visited, curr, currFlowRate)
+  -- these cases might be weird
+  | step > 30 = 0
+  | step == 30 = currFlowRate
+  | otherwise = if null scores then (30 - step) * currFlowRate else maximum scores
+  where
+    remaining = filter (`notElem` visited) $ Map.keys vMap
+    checkNeighbor v = flowAddTill + getMaxScore vMap pMap stepWithOpen (v : visited, v, currFlowRate + neighborRate)
+      where
+        neighborRate = vRate $ vMap ! v
+        numMovesTo = pMap ! (curr, v)
+        flowAddTill = (1 + numMovesTo) * currFlowRate -- might not need the 1+
+        stepWithOpen = 1 + step + numMovesTo -- TODO: what if this goes over 30?
+    scores = map checkNeighbor remaining
+
+runGetMax :: ValveMap -> Int
+runGetMax vMap = getMaxScore filtedVMap pMap 0 ([start], start, 0)
+  where
+    pMap = calcPathLengths vMap
+    filtedVMap = Map.filter (\v -> vRate v /= 0) vMap
+    start = Vname "AA"
 
 part1 :: IO ()
 part1 = do
   print "part1"
   input <- toVMap <$> readInputLinesParser parseValve
+  print $ runGetMax input
   -- print $ Map.elems input
   -- printNewLine $ Map.elems input
-  print $ length $ getAllOrderings input
+  -- print $ length $ getAllOrderings input
   return ()
 
 part2 :: IO ()
