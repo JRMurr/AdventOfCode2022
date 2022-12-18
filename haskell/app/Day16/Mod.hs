@@ -1,12 +1,11 @@
 module Day16.Mod where
 
 import Data.Function.Memoize (memoize3)
-import Data.List (delete, maximumBy)
+import Data.List (delete)
 import Data.Map (Map, (!))
 import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
-import qualified Debug.Trace as Debug
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Utils.Mod

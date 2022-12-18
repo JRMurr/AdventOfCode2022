@@ -71,6 +71,14 @@ coordRow, coordCol :: Coord -> Int
 coordRow (C row _) = row
 coordCol (C _ col) = col
 
+addRow, addCol :: Int -> Coord -> Coord
+addRow n (C r c) = C (r + n) c
+addCol n (C r c) = C r (c + n)
+
+-- default ordering compares rows
+compareCols :: Coord -> Coord -> Ordering
+compareCols c1 c2 = coordCol c1 `compare` coordCol c2
+
 above, below, left, right :: Coord -> Coord
 above (C y x) = C (y - 1) x
 below (C y x) = C (y + 1) x
