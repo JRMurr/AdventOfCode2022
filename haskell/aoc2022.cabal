@@ -108,6 +108,7 @@ executable aoc2022
         megaparsec >= 9.0,
         primitive    ^>= 0.7,
         parallel >= 3.2.2.0,
+        memoize >= 0.8.1,
         unordered-containers,
         hashable,
         pqueue,
