@@ -73,6 +73,7 @@ executable aoc2022
 
     -- Modules included in this executable, other than Main.
     other-modules:
+        Day19.Mod
         Day18.Mod
         Day17.Mod
         Day16.Mod
@@ -95,6 +96,7 @@ executable aoc2022
         Utils.MapUtils
         Utils.Mod
         Utils.Coords
+        Utils.ParseUtils
         Day00.Mod
 
     -- LANGUAGE extensions used by modules in this package.
