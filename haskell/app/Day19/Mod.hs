@@ -98,32 +98,32 @@ desiredOrder = [Geode, Obsidian, Clay, Ore]
 
 -- weight the better robots and resource more
 -- does not need to be perfect just try to look at some of the geode nodes faster
-scoreNode :: Node -> Int
-scoreNode ((robots, resourceCounts), step) = robotScore + rcScore
-  where
-    resourceScore Geode = 40000
-    resourceScore Obsidian = 20000
-    resourceScore Clay = 5000
-    resourceScore Ore = 0
-    robotScore = sum $ map ((100 *) . resourceScore) robots
-    rcScore = sum $ map (\(r, c) -> resourceScore r * c) (Map.toList resourceCounts)
+-- scoreNode :: Node -> Int
+-- scoreNode ((robots, resourceCounts), step) = robotScore + rcScore
+--   where
+--     resourceScore Geode = 40000
+--     resourceScore Obsidian = 20000
+--     resourceScore Clay = 5000
+--     resourceScore Ore = 0
+--     robotScore = sum $ map ((100 *) . resourceScore) robots
+--     rcScore = sum $ map (\(r, c) -> resourceScore r * c) (Map.toList resourceCounts)
 
 maxBlueprint :: Blueprint -> Int
-maxBlueprint bp = walk (PQ.singleton 0 (([Ore], Map.empty), 0)) Set.empty 0
+maxBlueprint bp = walk [(([Ore], Map.empty), 0)] Set.empty 0
   where
-    walk :: MaxPQueue Int Node -> Set Node -> Int -> Int
-    walk pq seen currMax
-      | PQ.null pq = Debug.trace ("fin: " ++ show (bId bp)) $ currMax -- end of queue return our current max
-      | step >= numSteps = walk pq' seen currMax -- skip
-      | Set.member node seen = walk pq' seen currMax -- already seen skip
-      | idealRemainingGeodes <= currMax = walk pq' seen currMax -- not possible to beat the max so skip
-      | otherwise = Debug.traceShow (currMax, node) $ walk pq'' seen' (max newGeodeCount currMax)
+    walk :: [Node] -> Set Node -> Int -> Int
+    walk nStack seen currMax
+      | null nStack = Debug.trace ("fin: " ++ show (bId bp)) $ currMax -- end of queue return our current max
+      | step >= numSteps = walk nStack' seen currMax -- skip
+      | Set.member node seen = walk nStack' seen currMax -- already seen skip
+      | idealRemainingGeodes <= currMax = walk nStack' seen currMax -- not possible to beat the max so skip
+      | otherwise = Debug.traceShow (currMax, node) $ walk nStack'' seen' (max newGeodeCount currMax)
       where
         t = numSteps - step
         idealRemainingGeodes = currGeodes + (numGeodeBots * t) + (idealNumGeodesPerStep !! t)
-        node@((robots, resourceCounts), step) = snd . PQ.findMax $ pq
+        node@((robots, resourceCounts), step) = head nStack
         getResourceCount = getDefResourceCounts resourceCounts
-        pq' = PQ.deleteMax pq
+        nStack' = tail nStack
 
         seen' = Set.insert node seen
         currGeodes = getResourceCount Geode
@@ -143,12 +143,13 @@ maxBlueprint bp = walk (PQ.singleton 0 (([Ore], Map.empty), 0)) Set.empty 0
 
         -- we always run the robots but we will only try to build 1 robot each step
         successors =
-          ((robots, resourceCounts'), step + 1)
-            : mapMaybe
-              (\r -> getNodeForBuild r <$> canBuild r)
-              desiredOrder
+          mapMaybe
+            (\r -> getNodeForBuild r <$> canBuild r)
+            desiredOrder
+            ++ [((robots, resourceCounts'), step + 1)]
 
-        pq'' = foldl' (\q n -> PQ.insert (scoreNode n) n q) pq' successors
+        -- nStack'' = foldl' (\q n -> PQ.insert (scoreNode n) n q) nStack' successors
+        nStack'' = successors ++ nStack'
 
         newGeodeCount = getDefResourceCounts resourceCounts' Geode
 
