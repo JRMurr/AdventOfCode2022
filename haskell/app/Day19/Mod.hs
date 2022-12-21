@@ -1,15 +1,17 @@
 module Day19.Mod where
 
+import Control.Applicative
+import Control.Monad
+import Control.Monad.State
 import Data.List (foldl', insert)
 import Data.Map (Map, (!))
 import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
 import Data.PQueue.Prio.Max (MaxPQueue)
 import qualified Data.PQueue.Prio.Max as PQ
-import Data.Set (Set)
-import qualified Data.Set as Set
 import qualified Debug.Trace as Debug
-import Text.Megaparsec
+import GHC.OldList (sortBy)
+import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
 import Utils.Mod
 import Utils.ParseUtils (parseInt)
@@ -109,15 +111,14 @@ desiredOrder = [Geode, Obsidian, Clay, Ore]
 --     rcScore = sum $ map (\(r, c) -> resourceScore r * c) (Map.toList resourceCounts)
 
 maxBlueprint :: Blueprint -> Int
-maxBlueprint bp = walk [(([Ore], Map.empty), 0)] Set.empty 0
+maxBlueprint bp = walk [(([Ore], Map.empty), 0)] 0
   where
-    walk :: [Node] -> Set Node -> Int -> Int
-    walk nStack seen currMax
+    walk :: [Node] -> Int -> Int
+    walk nStack currMax
       | null nStack = Debug.trace ("fin: " ++ show (bId bp)) $ currMax -- end of queue return our current max
-      | step >= numSteps = walk nStack' seen currMax -- skip
-      | Set.member node seen = walk nStack' seen currMax -- already seen skip
-      | idealRemainingGeodes <= currMax = walk nStack' seen currMax -- not possible to beat the max so skip
-      | otherwise = Debug.traceShow (currMax, node) $ walk nStack'' seen' (max newGeodeCount currMax)
+      | step >= numSteps = walk nStack' currMax -- skip
+      | idealRemainingGeodes <= currMax = walk nStack' currMax -- not possible to beat the max so skip
+      | otherwise = Debug.traceShow (currMax, node) $ walk nStackSorted (max newGeodeCount currMax)
       where
         t = numSteps - step
         idealRemainingGeodes = currGeodes + (numGeodeBots * t) + (idealNumGeodesPerStep !! t)
@@ -125,7 +126,6 @@ maxBlueprint bp = walk [(([Ore], Map.empty), 0)] Set.empty 0
         getResourceCount = getDefResourceCounts resourceCounts
         nStack' = tail nStack
 
-        seen' = Set.insert node seen
         currGeodes = getResourceCount Geode
         numGeodeBots = Utils.Mod.count (== Geode) robots
 
@@ -139,7 +139,7 @@ maxBlueprint bp = walk [(([Ore], Map.empty), 0)] Set.empty 0
         removeCost :: [Requirment] -> ResourceCounts
         removeCost = foldl' (\rc (r, c) -> Map.insertWith (flip (-)) r c rc) resourceCounts'
 
-        getNodeForBuild r cost = ((insert r robots, removeCost cost), step + 1)
+        getNodeForBuild r cost = ((r : robots, removeCost cost), step + 1)
 
         -- we always run the robots but we will only try to build 1 robot each step
         successors =
@@ -151,19 +151,69 @@ maxBlueprint bp = walk [(([Ore], Map.empty), 0)] Set.empty 0
         -- nStack'' = foldl' (\q n -> PQ.insert (scoreNode n) n q) nStack' successors
         nStack'' = successors ++ nStack'
 
+        nStackSorted = sortBy (\((r1, _), _) ((r2, _), _) -> r2 `compare` r1) nStack''
+
         newGeodeCount = getDefResourceCounts resourceCounts' Geode
 
--- idealPotentialGeods =
+-- https://stackoverflow.com/a/28550009
+maxBlueprintM :: Blueprint -> Int
+maxBlueprintM bp = evalState (dfs' (([Ore], Map.empty), 0)) 0
+  where
+    succ node@((robots, resourceCounts), step)
+      | step >= numSteps = []
+      | otherwise = Debug.traceShow (node) $ successors
+      where
+        getResourceCount = getDefResourceCounts resourceCounts
+
+        resourceCounts' = foldl' (\rc r -> Map.insertWith (+) r 1 rc) resourceCounts robots
+
+        canBuild desiredR = if hasAll then Just requiredResources else Nothing
+          where
+            requiredResources = reqs bp ! desiredR
+            hasAll = all (\(requiredR, c) -> getResourceCount requiredR >= c) requiredResources
+
+        removeCost :: [Requirment] -> ResourceCounts
+        removeCost = foldl' (\rc (r, c) -> Map.insertWith (flip (-)) r c rc) resourceCounts'
+
+        getNodeForBuild r cost = ((r : robots, removeCost cost), step + 1)
+
+        -- we always run the robots but we will only try to build 1 robot each step
+        successors =
+          mapMaybe
+            (\r -> getNodeForBuild r <$> canBuild r)
+            desiredOrder
+            ++ [((robots, resourceCounts'), step + 1)]
+
+    couldBeatMax ((robots, resourceCounts), step) currMax = idealRemainingGeodes > currMax
+      where
+        t = numSteps - step
+        getResourceCount = getDefResourceCounts resourceCounts
+        currGeodes = getResourceCount Geode
+        numGeodeBots = Utils.Mod.count (== Geode) robots
+        idealRemainingGeodes = currGeodes + (numGeodeBots * t) + (idealNumGeodesPerStep !! t)
+
+    dfs' :: Node -> State Int Int
+    dfs' node =
+      (\lst -> if null lst then 0 else maximum lst)
+        <$> forM
+          (succ node)
+          ( \s@((_, rc), _) ->
+              get >>= \newMax ->
+                if couldBeatMax s newMax
+                  then
+                    let newGeodeCount = getDefResourceCounts rc Geode
+                     in put (max newMax newGeodeCount) >> dfs' s
+                  else pure newMax
+          )
 
 part1 :: IO ()
 part1 = do
   print "part1"
   input <- readInputLinesParser parseBlueprint
-  print input
   -- let bp = head input
-  -- print $ maxBlueprint bp
+  -- print $ maxBlueprintM bp
   -- print bp
-  print $ map maxBlueprint (tail input)
+  print $ map maxBlueprintM (tail input)
   -- print $ sum $ map (\bp -> maxBlueprint bp * bId bp) input
   return ()
 
