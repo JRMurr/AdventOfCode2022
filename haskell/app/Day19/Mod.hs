@@ -1,5 +1,14 @@
 module Day19.Mod where
 
+import Data.List (foldl', insert)
+import Data.Map (Map, (!))
+import qualified Data.Map as Map
+import Data.Maybe (mapMaybe)
+import Data.PQueue.Prio.Max (MaxPQueue)
+import qualified Data.PQueue.Prio.Max as PQ
+import Data.Set (Set)
+import qualified Data.Set as Set
+import qualified Debug.Trace as Debug
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Utils.Mod
@@ -28,18 +37,23 @@ parseBlueprintId = label "blueprint id" $ do
   _ <- char ':'
   pure bluePrintId
 
-data Resource = Ore | Clay | Obsidian | Geode deriving (Show, Eq)
+data Resource = Ore | Clay | Obsidian | Geode deriving (Show, Eq, Ord)
 
 type Requirment = (Resource, Int)
 
+type RobotReqs = Map Resource [Requirment]
+
 data Blueprint = BP
   { bId :: Int,
-    oreReq :: Requirment,
-    clayReq :: Requirment,
-    obsidianReq :: [Requirment],
-    geodeReq :: [Requirment]
+    reqs :: RobotReqs
   }
   deriving (Show, Eq)
+
+type Robots = [Resource]
+
+type ResourceCounts = Map Resource Int
+
+type Inventory = (Robots, ResourceCounts)
 
 parseBlueprint :: Parser Blueprint
 parseBlueprint = label "blueprint" $ do
@@ -55,18 +69,101 @@ parseBlueprint = label "blueprint" $ do
   return
     ( BP
         { bId = bluePrintId,
-          oreReq = (Ore, ore),
-          clayReq = (Clay, clay),
-          obsidianReq = [(Ore, obsOre), (Clay, obsClay)],
-          geodeReq = [(Ore, geoOre), (Obsidian, geoObs)]
+          reqs =
+            Map.fromList
+              [ (Ore, [(Ore, ore)]),
+                (Clay, [(Ore, clay)]),
+                (Obsidian, [(Ore, obsOre), (Clay, obsClay)]),
+                (Geode, [(Ore, geoOre), (Obsidian, geoObs)])
+              ]
         }
     )
+
+type Node = (Inventory, Int) -- (Inventory, step)
+
+getDefResourceCounts :: (Ord k, Num a) => Map k a -> k -> a
+getDefResourceCounts m r = Map.findWithDefault 0 r m
+
+numSteps :: Int
+numSteps = 24
+
+-- for a given amount of time remaining whats the ideal number of geodes you could collect
+-- ie each step make a new bot and use the existing to get geodes
+idealNumGeodesPerStep :: [Int]
+idealNumGeodesPerStep = [((t - 1) * t) `div` 2 | t <- [0 .. 24]]
+
+-- try to build robots in this order
+desiredOrder :: [Resource]
+desiredOrder = [Geode, Obsidian, Clay, Ore]
+
+-- weight the better robots and resource more
+-- does not need to be perfect just try to look at some of the geode nodes faster
+scoreNode :: Node -> Int
+scoreNode ((robots, resourceCounts), step) = robotScore + rcScore
+  where
+    resourceScore Geode = 40000
+    resourceScore Obsidian = 20000
+    resourceScore Clay = 5000
+    resourceScore Ore = 0
+    robotScore = sum $ map ((100 *) . resourceScore) robots
+    rcScore = sum $ map (\(r, c) -> resourceScore r * c) (Map.toList resourceCounts)
+
+maxBlueprint :: Blueprint -> Int
+maxBlueprint bp = walk (PQ.singleton 0 (([Ore], Map.empty), 0)) Set.empty 0
+  where
+    walk :: MaxPQueue Int Node -> Set Node -> Int -> Int
+    walk pq seen currMax
+      | PQ.null pq = Debug.trace ("fin: " ++ show (bId bp)) $ currMax -- end of queue return our current max
+      | step >= numSteps = walk pq' seen currMax -- skip
+      | Set.member node seen = walk pq' seen currMax -- already seen skip
+      | idealRemainingGeodes <= currMax = walk pq' seen currMax -- not possible to beat the max so skip
+      | otherwise = Debug.traceShow (currMax, node) $ walk pq'' seen' (max newGeodeCount currMax)
+      where
+        t = numSteps - step
+        idealRemainingGeodes = currGeodes + (numGeodeBots * t) + (idealNumGeodesPerStep !! t)
+        node@((robots, resourceCounts), step) = snd . PQ.findMax $ pq
+        getResourceCount = getDefResourceCounts resourceCounts
+        pq' = PQ.deleteMax pq
+
+        seen' = Set.insert node seen
+        currGeodes = getResourceCount Geode
+        numGeodeBots = Utils.Mod.count (== Geode) robots
+
+        resourceCounts' = foldl' (\rc r -> Map.insertWith (+) r 1 rc) resourceCounts robots
+
+        canBuild desiredR = if hasAll then Just requiredResources else Nothing
+          where
+            requiredResources = reqs bp ! desiredR
+            hasAll = all (\(requiredR, c) -> getResourceCount requiredR >= c) requiredResources
+
+        removeCost :: [Requirment] -> ResourceCounts
+        removeCost = foldl' (\rc (r, c) -> Map.insertWith (flip (-)) r c rc) resourceCounts'
+
+        getNodeForBuild r cost = ((insert r robots, removeCost cost), step + 1)
+
+        -- we always run the robots but we will only try to build 1 robot each step
+        successors =
+          ((robots, resourceCounts'), step + 1)
+            : mapMaybe
+              (\r -> getNodeForBuild r <$> canBuild r)
+              desiredOrder
+
+        pq'' = foldl' (\q n -> PQ.insert (scoreNode n) n q) pq' successors
+
+        newGeodeCount = getDefResourceCounts resourceCounts' Geode
+
+-- idealPotentialGeods =
 
 part1 :: IO ()
 part1 = do
   print "part1"
   input <- readInputLinesParser parseBlueprint
   print input
+  -- let bp = head input
+  -- print $ maxBlueprint bp
+  -- print bp
+  print $ map maxBlueprint (tail input)
+  -- print $ sum $ map (\bp -> maxBlueprint bp * bId bp) input
   return ()
 
 part2 :: IO ()
