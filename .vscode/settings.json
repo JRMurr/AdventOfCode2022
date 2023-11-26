@@ -1,7 +1,7 @@
 {
-  "files.exclude": {
-    "**/_dayTemplate/**": true
-  },
+  // "files.exclude": {
+  //   "**/_dayTemplate/**": true
+  // },
   "cSpell.words": [
     "assocs",
     "fmap",
@@ -23,7 +23,8 @@
     "trimap",
     "uncurry",
     "unlines"
-  ]
+  ],
+  "roc-lang.language-server.exe": "/nix/store/a5iz3xfn4wifpkdi51mw5s08k4br2y4h-roc_lang_srv-0.0.1/bin/roc_ls"
   // "haskell.serverExtraArgs": "--cwd ./haskell",
   // "haskell.serverEnvironment": {
   //   "PWD": "/home/jr/code/aoc/2022"

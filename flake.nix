@@ -33,6 +33,7 @@
             just
 
             rocPkgs.cli
+            rocPkgs.lang-server
 
             aoc-cli
           ];
