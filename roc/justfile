@@ -5,8 +5,8 @@ default:
     @just --list
 
 run day='01' part='1' useExample='0':
-    cabal run aoc2022 -- {{day}} {{part}} {{useExample}}
+    roc run -- {{day}} {{part}} {{useExample}}
 
 
 get day='01':
-    aoc download -o -d {{day}} -I -i ./app/Day{{day}}/in
+    aoc download -o --day {{day}} -I -i ./app/Day{{day}}/in
